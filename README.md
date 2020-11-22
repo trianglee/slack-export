@@ -1,6 +1,11 @@
 # Slack Exporter
 
+Forked from:
+
+https://github.com/andriuspetrauskis/slack-export
+
 Original repo can be found here:
+
 https://github.com/zach-snell/slack-export
 
 ## Description
