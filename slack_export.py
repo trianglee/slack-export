@@ -1569,7 +1569,7 @@ def dumpDummyChannel():
     outFileName = u'{room}/{file}.json'.format( room = channelName, file = fileDate )
     writeMessageFile(outFileName, [])
 
-def downloadFiles(token):
+def downloadFiles(token, cookie_header=None):
     """
     Iterate through all json files, downloads files stored on files.slack.com and replaces the link with a local one
 
@@ -1612,7 +1612,8 @@ def downloadFiles(token):
                                 continue
 
                             # Download files
-                            headers = {"Authorization": "Bearer %s" % token}
+                            headers = {"Authorization": f"Bearer {token}",
+                            **cookie_header}
                             r = requests.get(url.geturl(), headers=headers)
                             open(localFile, 'wb').write(r.content)
 
@@ -1748,6 +1749,6 @@ if __name__ == "__main__":
         fetchDirectMessages(selectedDms)
 
     if args.downloadSlackFiles:
-        downloadFiles(args.token)
+        downloadFiles(token=args.token, cookie_header=cookie_header)
 
     finalize()
