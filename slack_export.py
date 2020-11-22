@@ -1637,6 +1637,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Export Slack history')
 
     parser.add_argument('--token', required=True, help="Slack API token")
+    parser.add_argument('--cookie', help="a set of cookies for the xoxc api token")
     parser.add_argument('--zip', help="Name of a zip file to output as")
 
     parser.add_argument(
