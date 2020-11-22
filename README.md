@@ -23,9 +23,13 @@ This use of the API is blessed by Slack : https://get.slack.help/hc/en-us/articl
 " If you want to export the contents of your own private groups and direct messages
 please see our API documentation."
 
-One way to get your token is to obtain it here:
+A guide to get your client token and cookie can be found on the ircslackd repo, see link below:
 
-https://api.slack.com/custom-integrations/legacy-tokens
+https://github.com/adsr/irslackd/wiki/IRC-Client-Config#xoxc-tokens
+
+I'm not certain which cookies are necessary but there is a cookie table provided by slack here:
+
+https://slack.com/intl/en-au/cookie-table#
 
 ## Dependencies
 ```
