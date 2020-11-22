@@ -33,7 +33,6 @@ https://slack.com/intl/en-au/cookie-table#
 
 ## Dependencies
 ```
-pip install slacker # https://github.com/os/slacker
 pip install pick # https://github.com/wong2/pick
 ```
 
