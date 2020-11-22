@@ -33,7 +33,8 @@ https://slack.com/intl/en-au/cookie-table#
 
 ## Dependencies
 ```
-pip install pick # https://github.com/wong2/pick
+pip install requests  # https://requests.readthedocs.io/en/master/
+pip install pick      # https://github.com/wong2/pick
 ```
 
 ## Basic Usage
