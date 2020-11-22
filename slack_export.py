@@ -1701,7 +1701,8 @@ if __name__ == "__main__":
     userNamesById = {}
     userIdsByName = {}
 
-    slack = Slacker(args.token)
+    cookie_header = {'cookie': args.cookie}
+    slack = Slacker(headers=cookie_header, token=args.token)
     testAuth = doTestAuth()
     tokenOwnerId = testAuth['user_id']
 
