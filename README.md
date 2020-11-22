@@ -40,16 +40,16 @@ pip install pick # https://github.com/wong2/pick
 ## Basic Usage
 ```
 # Export all Channels and DMs
-python slack_export.py --token xoxs-123...
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..."
 
 # List the Channels and DMs available for export
-python slack_export.py --token xoxs-123... --dryRun
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --dryRun
 
 # Prompt you to select the Channels and DMs to export
-python slack_export.py --token xoxs-123... --prompt
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --prompt
 
 # Generate a `slack_export.zip` file for use with slack-export-viewer
-python slack_export.py --token xoxs-123... --zip slack_export
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --zip slack_export
 ```
 
 ## Selecting Conversations to Export
@@ -83,28 +83,28 @@ Exclude any public channels for which the user is not a member
 ### Examples
 ```
 # Export only Public Channels
-python slack_export.py --token xoxs-123... --publicChannels
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --publicChannels
 
 # Export only the "General" and "Random" Public Channels
-python slack_export.py --token xoxs-123... --publicChannels General Random
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --publicChannels General Random
 
 # Export only Private Channels and Group DMs
-python slack_export.py --token xoxs-123... --groups
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --groups
 
 # Export only the "my_private_channel" Private Channel
-python slack_export.py --token xoxs-123... --groups my_private_channel
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --groups my_private_channel
 
 # Export only 1:1 DMs
-python slack_export.py --token xoxs-123... --directMessages
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --directMessages
 
 # Export only 1:1 DMs with jane_smith and john_doe
-python slack_export.py --token xoxs-123... --directMessages jane_smith john_doe
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --directMessages jane_smith john_doe
 
 # Export only Public/Private Channels and Group DMs (no 1:1 DMs)
-python slack_export.py --token xoxs-123... --publicChannels --groups
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --publicChannels --groups
 
 # Export only 1:1 DMs with jane_smith and the Public Channels you select when prompted
-python slack_export.py --token xoxs-123... --directMessages jane_smith --publicChannels --prompt
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --directMessages jane_smith --publicChannels --prompt
 ```
 This script is provided in an as-is state and I guarantee no updates or quality of service at this time.
 
@@ -118,7 +118,7 @@ replace the URLs inside the export to point to the downloaded files assuming the
 
 ### Example including linking files.slack.com with `slack-export-viewer`
 ```
-python slack_export.py --token xoxs-123... --zip slack_export --downloadSlackFiles
+python slack_export.py --token xoxc-123... --cookie "b=...; d=...; x=..." --zip slack_export --downloadSlackFiles
 
 # Clone slack-export-viewer from github
 cd ..
