@@ -1282,7 +1282,7 @@ class Slacker(object):
 # slack.im
 #
 # channelId is the id of the channel/group/im you want to download history for.
-def getHistory(pageableObject, channelId, pageSize = 100):
+def getHistory(pageableObject, channelId, pageSize = 1000):
     messages = []
     lastTimestamp = None
 
