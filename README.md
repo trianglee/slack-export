@@ -27,9 +27,9 @@ This use of the API is blessed by Slack : https://get.slack.help/hc/en-us/articl
 "If you want to export the contents of your own private groups and direct messages
 please see our API documentation."
 
-This fork fixes some issues one the preceding fork, and adds walk-through usage instructions.
+This fork fixes some issues one the preceding fork, and adds step-by-step instructions.
 
-Up-to-date walk-through usage instructions can be found in [USAGE.md](USAGE.md).
+Up-to-date step-by-step instructions can be found in [STEP-BY-STEP.md](STEP-BY-STEP.md).
 
 ## Token and Cookie
 

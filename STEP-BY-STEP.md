@@ -1,4 +1,4 @@
-# Usage Instructions
+# Exporting Message From Slack - Step-by-Step
 
 ## Install
 
