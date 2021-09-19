@@ -2,6 +2,10 @@
 
 Forked from:
 
+https://github.com/chr1spy1/slack-export
+
+Which is forked from:
+
 https://github.com/andriuspetrauskis/slack-export
 
 Original repo can be found here:
@@ -12,7 +16,7 @@ https://github.com/zach-snell/slack-export
 
 The included script 'slack_export.py' works with a provided token to export Channels, Private Channels, Direct Messages and Multi Person Messages.
 
-This script finds all channels, private channels and direct messages that your user participates in, downloads the complete history for those converations and writes each conversation out to seperate json files.
+This script finds all channels, private channels and direct messages that your user participates in, downloads the complete history for those conversations and writes each conversation out to separate JSON files.
 
 This user centric history gathering is nice because the official slack data exporter only exports public channels.
 
@@ -20,8 +24,14 @@ There may be limitations on what you can export based on the paid status of your
 
 This use of the API is blessed by Slack : https://get.slack.help/hc/en-us/articles/204897248
 
-" If you want to export the contents of your own private groups and direct messages
+"If you want to export the contents of your own private groups and direct messages
 please see our API documentation."
+
+This fork fixes some issues one the preceding fork, and adds walk-through usage instructions.
+
+Up-to-date walk-through usage instructions can be found in [USAGE.md](USAGE.md).
+
+## Token and Cookie
 
 A guide to get your client token and cookie can be found on the ircslackd repo, see link below:
 
@@ -32,9 +42,9 @@ I'm not certain which cookies are necessary but there is a cookie table provided
 https://slack.com/intl/en-au/cookie-table#
 
 ## Dependencies
+
 ```
-pip install requests  # https://requests.readthedocs.io/en/master/
-pip install pick      # https://github.com/wong2/pick
+pip install -r requirements.txt
 ```
 
 ## Basic Usage
