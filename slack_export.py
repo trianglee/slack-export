@@ -1609,8 +1609,9 @@ def downloadFiles(token, cookie_header=None):
                             # Replace URL in data - suitable for use with slack-export-viewer if files.slack.com is linked
                             slackFile[key] = "/static/files.slack.com%s" % url.path
 
-                            # Check if file already downloaded, with same size
-                            if os.path.exists(localFile) and os.path.getsize(localFile) == slackFile.get("size", -1):
+                            # Check if file already downloaded, with a non-zero size
+                            # (can't check for same size because thumbnails don't have a size)
+                            if os.path.exists(localFile) and (os.path.getsize(localFile) > 0):
                                 print("Skipping already downloaded file: %s" % localFile)
                                 continue
 
