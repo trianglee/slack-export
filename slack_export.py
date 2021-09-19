@@ -1415,7 +1415,14 @@ def fetchPublicChannels(channels):
     for channel in channels:
         channelDir = channel['name']
         print(u"Fetching history for Public Channel: {0}".format(channelDir))
-        mkdir( channelDir )
+        try:
+            mkdir( channelDir )
+        except NotADirectoryError:
+            # Failed creating directory, probably because the name is not a valid
+            # Windows directory name (like "com4"). Adding a prefix to try to work-around
+            # that.
+            channelDir = ("c-" + channel['name'])
+            mkdir( channelDir )
         messages = getHistory(slack.channels, channel['id'])
         parseMessages( channelDir, messages, 'channel')
 
