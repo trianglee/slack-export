@@ -45,7 +45,18 @@
    ```
    venv\scripts\pip install install windows-curses
    ```
-   
+
+1. Windows only - increase maximal path length limitation.
+
+   Done by adding a registry key named `LongPathsEnabled` of type
+   `DWORD` and value `1`, under 
+   `Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem`.
+
+   This *might* be needed if there are long file names in static files
+   stored by Slack.
+
+   See more details in https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation.
+
 1. Install "slack-export-viewer" -
 
    Windows -
