@@ -1431,7 +1431,7 @@ def dumpChannelFile():
             mpim.append(group)
             continue
         private.append(group)
-    
+
     # slack viewer wants DMs to have a members list, not sure why but doing as they expect
     for dm in dms:
         dm['members'] = [dm['user'], tokenOwnerId]
@@ -1525,7 +1525,7 @@ def bootstrapKeyValues():
     users = slack.users.list().body['members']
     print(u"Found {0} Users".format(len(users)))
     sleep(1)
-    
+
     channels = slack.channels.list().body['channels']
     print(u"Found {0} Public Channels".format(len(channels)))
     sleep(1)
@@ -1606,6 +1606,9 @@ def downloadFiles(token, cookie_header=None):
                             # Create folder structure
                             os.makedirs(os.path.dirname(localFile), exist_ok=True)
 
+                            # Replace URL in data - suitable for use with slack-export-viewer if files.slack.com is linked
+                            slackFile[key] = "/static/files.slack.com%s" % url.path
+
                             # Check if file already downloaded, with same size
                             if os.path.exists(localFile) and os.path.getsize(localFile) == slackFile.get("size", -1):
                                 print("Skipping already downloaded file: %s" % localFile)
@@ -1616,9 +1619,6 @@ def downloadFiles(token, cookie_header=None):
                             **cookie_header}
                             r = requests.get(url.geturl(), headers=headers)
                             open(localFile, 'wb').write(r.content)
-
-                            # Replace URL in data - suitable for use with slack-export-viewer if files.slack.com is linked
-                            slackFile[key] = "/static/files.slack.com%s" % url.path
 
             # Save updated data to json file
             with open(filePath, "w") as outFile:
