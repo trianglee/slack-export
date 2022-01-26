@@ -2,10 +2,12 @@
 
 ## Install
 
+1. Create and move into a destination directory for the archive and downloaders -
+   
 1. Clone the "slack-export" repo -
 
    ```
-   git clone https://github.com/trianglee/slack-export.git
+   git clone https://github.com/nooj/slack-export.git
    ```
    
 1. Create virtualenv -
@@ -13,14 +15,12 @@
    Windows -
 
    ```
-   cd slack-export
    py -3 -m virtualenv venv
    ```
 
    Linux -
 
    ```
-   cd slack-export
    python3 -m virtualenv venv
    ```
    
@@ -29,13 +29,13 @@
    Windows -
 
    ```
-   venv\scripts\pip install -r requirements.txt
+   venv\scripts\pip install -r slack-export\requirements.txt
    ```
 
    Linux -
 
    ```
-   venv/bin/pip install -r requirements.txt
+   venv/bin/pip install -r slack-export/requirements.txt
    ```
 
 1. Windows only - install Windows ncurses package -
@@ -73,13 +73,13 @@
 
 ## Obtain Token and Cookies
 
-1. In Firefox, open https://arm-isg.slack.com/customize.
+1. In a browser with developer tools active, open https://YOUR-SLACK-WORKSPACE.slack.com/customize.
 
 1. Sign in with SSO (if needed).
 
-1. F12, for Web Developer Tools.
+1. Open Web Developer Tools.  (F12, or right click -> Inspect, etc.)
 
-1. "Console" tab.
+1. Select the "Console" tab.
 
 1. Type the command -
 
@@ -103,8 +103,12 @@
    ```
    SLACK_TOKEN="xoxc-..."
    ```
+   or
+   ```
+   export SLACK_TOKEN="xoxc-..."
+   ```
 
-1. "Storage" tab.
+1. Select the "Storage" tab.
 
 1. Find the "d" cookie, and copy its value. Add a "d=" at the beginning, so it would
    end up being of the form `d=CD0I...`.  
@@ -122,6 +126,10 @@
 
    ```
    SLACK_COOKIE="d=CD0I..."
+   ```
+   or
+   ```
+   export SLACK_COOKIE="d=CD0I..."
    ```
 
 ## Run
@@ -152,7 +160,12 @@
    Linux -
 
    ```
-   venv/bin/python slack_export.py --token $SLACK_TOKEN --cookie $SLACK_COOKIE --directMessages --downloadSlackFiles 
+   venv/bin/python slack_export.py \
+     --token $SLACK_TOKEN --cookie $SLACK_COOKIE \
+     --groups \
+     --directMessages \
+     --publicChannels \
+     --downloadSlackFiles 
    ```
 
    The messages are exported to a directory of the form `YYYYMMDD-HHMMSS-slack_export`.
