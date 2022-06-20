@@ -11,6 +11,7 @@ from time import sleep
 from urllib.parse import urlparse
 import requests
 
+
 #################### Patched - Slacker ######################
 # Purpose of the patch is to allow for a cookie header to be set
 # so that xoxc (slack client) tokens can be used.
@@ -119,7 +120,7 @@ class BaseAPI(object):
             # handle HTTP 429 as documented at
             # https://api.slack.com/docs/rate-limits
             if response.status_code == requests.codes.too_many:
-                time.sleep(int(
+                sleep(1 + int(
                     response.headers.get('retry-after', DEFAULT_WAIT)
                 ))
                 continue
@@ -1274,6 +1275,82 @@ class Slacker(object):
 
 ##################################################################
 
+# Obtains all replies for a given channel id + a starting timestamp
+# Duplicates the logic in getHistory
+def getReplies(channelId, timestamp, pageSize=1000):
+    conversationObject = slack.conversations
+    messages = []
+    lastTimestamp = None
+    lastTimestampFromPreviousIteration = lastTimestamp
+
+    while True:
+        try:
+            response = conversationObject.replies(
+                channel=channelId,
+                ts=timestamp,
+                latest=lastTimestamp,
+                oldest=0,
+                limit=pageSize,
+            ).body
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                retryInSeconds = int(e.response.headers["Retry-After"])
+                print("Rate limit hit. Retrying in {0} second{1}.".format(retryInSeconds, "s" if retryInSeconds > 1 else ""))
+                sleep(retryInSeconds + 1)
+
+                response = conversationObject.replies(
+                    channel=channelId,
+                    ts=timestamp,
+                    latest=lastTimestamp,
+                    oldest=0,
+                    limit=pageSize,
+                ).body
+
+        messages.extend(response["messages"])
+
+        if response["has_more"] == True:
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            sleep(1.3)  # Respect the Slack API rate limit
+                
+            lastTimestamp = messages[-1]['ts']  # -1 means last element in a list
+            minTimestamp = None
+                
+            if lastTimestamp == lastTimestampFromPreviousIteration:
+                # Then we might be in an infinite loop,
+                # because lastTimestamp is supposed to be decreasing.
+                # Try harder: maybe we want messages[-2]['ts']?
+                    
+                minTimestamp = float(lastTimestamp)
+                for m in messages:
+                    if minTimestamp > float(m['ts']):
+                        minTimestamp = float(m['ts'])
+                
+                if minTimestamp == lastTimestamp:
+                    print("warning: lastTimestamp is not changing.  infinite loop?")
+                lastTimestamp = minTimestamp
+                    
+            lastTimestampFromPreviousIteration = lastTimestamp
+
+        else:
+            break
+
+    if lastTimestamp != None:
+        print("")
+
+    messages.sort(key=lambda message: message["ts"])
+
+    # Obtaining replies also gives us the first message in the the thread
+    # (which we don't want) -- after sorting, our first message with the be the
+    # first in the list of all messages, so we remove the head of the list
+    assert messages[0]["ts"] == timestamp, "unexpected start of thread"
+    messages = messages[1:]
+
+    return messages
+
+
+
+
 # fetches the complete message history for a channel/group/im
 #
 # pageableObject could be:
@@ -1282,37 +1359,80 @@ class Slacker(object):
 # slack.im
 #
 # channelId is the id of the channel/group/im you want to download history for.
+
 def getHistory(pageableObject, channelId, pageSize = 1000):
     messages = []
     lastTimestamp = None
+    lastTimestampFromPreviousIteration = lastTimestamp
 
     while(True):
         try:
-            response = pageableObject.history(
-                channel = channelId,
-                latest    = lastTimestamp,
-                oldest    = 0,
-                count     = pageSize
-            ).body
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 429:
-                retryInSeconds = int(e.response.headers['Retry-After'])
-                print(u"Rate limit hit. Retrying in {0} second{1}.".format(retryInSeconds, "s" if retryInSeconds > 1 else ""))
-                sleep(retryInSeconds)
+             if isinstance(pageableObject, Conversations):
+                response = pageableObject.history(
+                    channel=channelId,
+                    latest=lastTimestamp,
+                    oldest=0,
+                    limit=pageSize
+                ).body
+             else:
                 response = pageableObject.history(
                     channel = channelId,
                     latest    = lastTimestamp,
                     oldest    = 0,
                     count     = pageSize
                 ).body
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                retryInSeconds = int(e.response.headers['Retry-After'])
+                print("Rate limit hit. Retrying in {0} second{1}.".format(retryInSeconds, "s" if retryInSeconds > 1 else ""))
+                sleep(retryInSeconds + 1)
+                if isinstance(pageableObject, Conversations):
+                    response = pageableObject.history(
+                        channel=channelId,
+                        latest=lastTimestamp,
+                        oldest=0,
+                        limit=pageSize
+                    ).body
+                else:
+                    response = pageableObject.history(
+                        channel=channelId,
+                        latest=lastTimestamp,
+                        oldest=0,
+                        count=pageSize
+                    ).body
 
         messages.extend(response['messages'])
 
+        # Grab all replies
+        for message in response["messages"]:
+            if "thread_ts" in message:
+                sleep(0.5) #INSERT LIMIT 
+                messages.extend(getReplies(channelId, message["thread_ts"], pageSize))
+
         if (response['has_more'] == True):
-            sys.stdout.write(".")
+            sys.stdout.write("*")
             sys.stdout.flush()
+            sleep(1.3) # Respect the Slack API rate limit
+                
             lastTimestamp = messages[-1]['ts'] # -1 means last element in a list
-            sleep(1) # Respect the Slack API rate limit
+            minTimestamp = None
+                
+            if lastTimestamp == lastTimestampFromPreviousIteration:
+                # Then we might be in an infinite loop,
+                # because lastTimestamp is supposed to be decreasing.
+                # Try harder: maybe we want messages[-2]['ts']?
+                    
+                minTimestamp = float(lastTimestamp)
+                for m in messages:
+                    if minTimestamp > float(m['ts']):
+                        minTimestamp = float(m['ts'])
+                
+                if minTimestamp == lastTimestamp:
+                    print("warning: lastTimestamp is not changing.  infinite loop?")
+                lastTimestamp = minTimestamp
+                    
+            lastTimestampFromPreviousIteration = lastTimestamp
+
         else:
             break
 
@@ -1377,7 +1497,7 @@ def parseMessages( roomDir, messages, roomType ):
 
         #if it's on a different day, write out the previous day's messages
         if fileDate != currentFileDate:
-            outFileName = u'{room}/{file}.json'.format( room = roomDir, file = currentFileDate )
+            outFileName = '{room}/{file}.json'.format( room = roomDir, file = currentFileDate )
             writeMessageFile( outFileName, currentMessages )
             currentFileDate = fileDate
             currentMessages = []
@@ -1391,7 +1511,7 @@ def parseMessages( roomDir, messages, roomType ):
             channelRename( oldRoomPath, newRoomPath )
 
         currentMessages.append( message )
-    outFileName = u'{room}/{file}.json'.format( room = roomDir, file = currentFileDate )
+    outFileName = '{room}/{file}.json'.format( room = roomDir, file = currentFileDate )
     writeMessageFile( outFileName, currentMessages )
 
 def filterConversationsByName(channelsOrGroups, channelOrGroupNames):
@@ -1414,7 +1534,7 @@ def fetchPublicChannels(channels):
 
     for channel in channels:
         channelDir = channel['name']
-        print(u"Fetching history for Public Channel: {0}".format(channelDir))
+        print("Fetching history for Public Channel: {0}".format(channelDir))
         try:
             mkdir( channelDir )
         except NotADirectoryError:
@@ -1423,7 +1543,7 @@ def fetchPublicChannels(channels):
             # that.
             channelDir = ("c-" + channel['name'])
             mkdir( channelDir )
-        messages = getHistory(slack.channels, channel['id'])
+        messages = getHistory(slack.conversations, channel['id'])
         parseMessages( channelDir, messages, 'channel')
 
 # write channels.json file
@@ -1475,10 +1595,10 @@ def fetchDirectMessages(dms):
 
     for dm in dms:
         name = userNamesById.get(dm['user'], dm['user'] + " (name unknown)")
-        print(u"Fetching 1:1 DMs with {0}".format(name))
+        print("Fetching 1:1 DMs with {0}".format(name))
         dmId = dm['id']
         mkdir(dmId)
-        messages = getHistory(slack.im, dm['id'])
+        messages = getHistory(slack.conversations, dm['id'])
         parseMessages( dmId, messages, "im" )
 
 def promptForGroups(groups):
@@ -1501,8 +1621,8 @@ def fetchGroups(groups):
         groupDir = group['name']
         mkdir(groupDir)
         messages = []
-        print(u"Fetching history for Private Channel / Group DM: {0}".format(group['name']))
-        messages = getHistory(slack.groups, group['id'])
+        print("Fetching history for Private Channel / Group DM: {0}".format(group['name']))
+        messages = getHistory(slack.conversations, group['id'])
         parseMessages( groupDir, messages, 'group' )
 
 # fetch all users for the channel and return a map userId -> userName
@@ -1523,27 +1643,52 @@ def doTestAuth():
     testAuth = slack.auth.test().body
     teamName = testAuth['team']
     currentUser = testAuth['user']
-    print(u"Successfully authenticated for team {0} and user {1} ".format(teamName, currentUser))
+    print("Successfully authenticated for team {0} and user {1} ".format(teamName, currentUser))
     return testAuth
 
 # Since Slacker does not Cache.. populate some reused lists
+# TODO: 
+#   1. Only populate data for lists that will be used in export.
+#   2. Allow adjustable limits (greater or less than 1000).
+#      Fork by veqryn appears to do this for users:
+#        - users = slack.users.list().body['members']
+#        - print(u"Found {0} Users".format(len(users)))
+#        -  
+#        + users_list = slack.users.list(limit=500)
+#        + users = users_list.body['members']
+#        + while len(users_list.body['members']) >= 500:
+#        +     users_list = slack.users.list(limit=500, cursor=users_list.body['response_metadata']['next_cursor'])
+#        +     users.extend(users_list.body['members'])
+#        +     sleep(1)  # crude rate limit
+#        +        
+#        + print("Found {0} Users".format(len(users)))
+#   
 def bootstrapKeyValues():
     global users, channels, groups, dms
+     
     users = slack.users.list().body['members']
-    print(u"Found {0} Users".format(len(users)))
-    sleep(1)
+    print("Found {0} Users".format(len(users)))
+    sleep(3.05)
 
-    channels = slack.channels.list().body['channels']
-    print(u"Found {0} Public Channels".format(len(channels)))
-    sleep(1)
+    channels = slack.conversations.list(limit = 1000, types=('public_channel')).body['channels']
+    print("Found {0} Public Channels".format(len(channels)))
+    # think mayne need to retrieve channel memberships for the slack-export-viewer to work
+    for n in range(len(channels)):
+        channels[n]["members"] = slack.conversations.members(limit=1000, channel=channels[n]['id']).body['members']
+        print("Retrieved members of {0}".format(channels[n]['name']))
+    sleep(3.05)
 
-    groups = slack.groups.list().body['groups']
-    print(u"Found {0} Private Channels or Group DMs".format(len(groups)))
-    sleep(1)
+    groups = slack.conversations.list(limit = 1000, types=('private_channel', 'mpim')).body['channels']
+    print("Found {0} Private Channels or Group DMs".format(len(groups)))
+    # need to retrieve channel memberships for the slack-export-viewer to work
+    for n in range(len(groups)):
+        groups[n]["members"] = slack.conversations.members(limit=1000, channel=groups[n]['id']).body['members']
+        print("Retrieved members of {0}".format(groups[n]['name']))
+    sleep(3.05)
 
-    dms = slack.im.list().body['ims']
-    print(u"Found {0} 1:1 DM conversations\n".format(len(dms)))
-    sleep(1)
+    dms = slack.conversations.list(limit = 1000, types=('im')).body['channels']
+    print("Found {0} 1:1 DM conversations\n".format(len(dms)))
+    sleep(3.05)
 
     getUserMap()
 
@@ -1573,7 +1718,7 @@ def dumpDummyChannel():
     channelName = channels[0]['name']
     mkdir( channelName )
     fileDate = '{:%Y-%m-%d}'.format(datetime.today())
-    outFileName = u'{room}/{file}.json'.format( room = channelName, file = fileDate )
+    outFileName = '{room}/{file}.json'.format( room = channelName, file = fileDate )
     writeMessageFile(outFileName, [])
 
 def downloadFiles(token, cookie_header=None):
@@ -1626,7 +1771,12 @@ def downloadFiles(token, cookie_header=None):
                             headers = {"Authorization": f"Bearer {token}",
                             **cookie_header}
                             r = requests.get(url.geturl(), headers=headers)
-                            open(localFile, 'wb').write(r.content)
+                            try: 
+                                open(localFile, 'wb').write(r.content)
+                            except FileNotFoundError: 
+                                print("File writing error-still all broken")
+                                continue
+                            
 
             # Save updated data to json file
             with open(filePath, "w") as outFile:
